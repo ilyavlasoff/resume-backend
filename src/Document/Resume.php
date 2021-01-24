@@ -62,7 +62,7 @@ class Resume
     private $experienceLevel;
 
     /**
-     * @Mongo\EmbedMany(targetDocument="Workplace")
+     * @Mongo\Field(type="collection")
      */
     private $workplaces;
 
@@ -72,7 +72,7 @@ class Resume
     private $educationLevel;
 
     /**
-     * @Mongo\EmbedMany(targetDocument="Education")
+     * @Mongo\Field(type="collection")
      */
     private $educations;
 
