@@ -10,6 +10,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use App\Document\Resume;
 
 /**
@@ -25,7 +26,7 @@ class ApiController
     {
         $this->dm = $dm;
         $encoders = [new JsonEncoder()];
-        $normalizers = [new ObjectNormalizer()];
+        $normalizers = [new DateTimeNormalizer(), new ObjectNormalizer()];
         $this->serializer = new Serializer($normalizers, $encoders);
     }
 
@@ -41,7 +42,8 @@ class ApiController
         foreach ($data as $item)
         {
             $serializedItem = $this->serializer->normalize($item, null,
-                [AbstractNormalizer::ATTRIBUTES => ['id', 'firstName', 'lastName', 'patronymic', 'birthday', 'desiredPost']]);
+                [AbstractNormalizer::ATTRIBUTES => ['id', 'firstName', 'lastName', 'patronymic', 'birthday', 'desiredPost', 'status', 'photo'],
+                    DateTimeNormalizer::FORMAT_KEY => 'Y-m-d']);
             $serializedItemsArray[] = $serializedItem;
         }
 
@@ -67,7 +69,7 @@ class ApiController
 
         try
         {
-            $resumeData = $this->serializer->serialize($resume, 'json');
+            $resumeData = $this->serializer->normalize($resume);
         }
         catch (\Exception $e)
         {

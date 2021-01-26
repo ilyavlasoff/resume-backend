@@ -6,6 +6,7 @@
 parameters:
     env(MONGODB_URL): ''
     env(MONGODB_DB): ''
+    'filedir': '%kernel.project_dir%/public/media/photos'
 
 services:
     # default configuration for services in *this* file
