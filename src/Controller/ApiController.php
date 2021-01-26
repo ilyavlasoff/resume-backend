@@ -99,7 +99,7 @@ class ApiController
         {
             return new JsonResponse(json_encode([
                 'status' => 'error',
-                'data' => 'Wrong object structure'
+                'error' => 'Wrong object structure'
             ]));
         }
 
