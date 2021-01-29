@@ -181,9 +181,8 @@ class ApiController extends AbstractController
      */
     public function getCountries(Request $request)
     {
-        $data = json_decode($request->getContent(), true);
-        $q = isset($data['q']) ? $data['q'] : null;
-        $count = isset($data['count']) ? $data['count'] : null;
+        $q = $request->query->get('q');
+        $count = $request->query->get('count');
 
         if (! $q)
         {
