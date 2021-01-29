@@ -7,6 +7,9 @@ parameters:
     env(MONGODB_URL): ''
     env(MONGODB_DB): ''
     'filedir': '%kernel.project_dir%/public/media/photos'
+    'client-storage': '%kernel.project_dir$/storage'
+    'vk-access-token': '%env(resolve:VK_ACCESS_TOKEN)%'
+    'vk-api-version': '%env(resolve:VK_API_VERSION)%'
 
 services:
     # default configuration for services in *this* file

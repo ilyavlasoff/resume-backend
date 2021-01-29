@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ODM\MongoDB\DocumentManager;
@@ -12,12 +13,15 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use App\Document\Resume;
+use Symfony\Component\HttpClient\CachingHttpClient;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpKernel\HttpCache\Store;
 
 /**
  * Class ApiController
  * @package App\Controller
  */
-class ApiController
+class ApiController extends AbstractController
 {
     private $dm;
     private $serializer;
@@ -169,6 +173,67 @@ class ApiController
 
         return new JsonResponse(json_encode([
             'status' => 'success'
+        ]));
+    }
+
+    /**
+     * @Route("/api/vk/countries-list", name="getCountriesList", methods={"GET"})
+     */
+    public function getCountries(Request $request)
+    {
+        $data = json_decode($request->getContent(), true);
+        $q = isset($data['q']) ? $data['q'] : null;
+        $count = isset($data['count']) ? $data['count'] : null;
+
+        if (! $q)
+        {
+            return new JsonResponse(json_encode([
+                'status' => 'error',
+                'error' => 'incorrect request parameter'
+            ]));
+        }
+
+        $store = new Store($this->getParameter('client-storage'));
+        $client = HttpClient::create();
+        $client = new CachingHttpClient($client, $store);
+
+        $parameters = [
+            'need_all' => '1',
+            'count' => '1000',
+            'access_token' => $this->getParameter('vk-access-token'),
+            'v' => $this->getParameter('vk-api-version'),
+            'lang' => 'ru'
+        ];
+        $p = implode('&', array_map(
+            function($v, $k) {
+                return $v . '=' . $k;
+            }, array_keys($parameters), $parameters
+        ));
+        $url = 'https://api.vk.com/method/database.getCountries?' . $p;
+        $response = $client->request('GET', $url);
+
+        if (strval($response->getStatusCode()) !== '200') {
+            return new JsonResponse(json_encode([
+                'status' => 'error',
+                'error' => 'host didn\'t get response'
+            ]));
+        }
+
+        $data = $response->toArray();
+
+        $countries = $data['response']['items'];
+        $filteredArray = array_filter($countries, function ($el) use ($q) {
+            return (isset($el['title']) && str_contains(strtolower($el['title']), strtolower($q)));
+        },ARRAY_FILTER_USE_BOTH);
+
+        if ($count)
+        {
+            $filteredArray = array_slice($filteredArray, 0, $count);
+        }
+
+        return new JsonResponse(json_encode([
+            'status' => 'success',
+            'data' => $filteredArray
         ]));
     }
 }
